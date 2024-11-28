@@ -53,7 +53,7 @@ class AsyncThreadPool {
   void worker();  // 执行任务的线程（多个子线程，从任务队列取任务，再无其它）
   void manager(); // 管理线程（一个子线程，按时检测线程池状态并进行调整，调整工作线程数量）
  public:
-  bool addTask(taskCallBack cb);
+  bool addTask(taskCallBack&& cb);
 };
 
 #endif //THREADPOOLS_ASYNCTHREADPOOL_ASYNCTHREADPOOL_H_

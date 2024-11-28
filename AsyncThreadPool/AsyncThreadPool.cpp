@@ -16,7 +16,7 @@ AsyncThreadPool::AsyncThreadPool(int min, int max, int queMaxSize)
   }
 }
 
-bool AsyncThreadPool::addTask(AsyncThreadPool::taskCallBack cb) {
+bool AsyncThreadPool::addTask(AsyncThreadPool::taskCallBack&& cb) {
   std::lock_guard<std::mutex> lg(m_queueMtx);
   if (m_taskQueue.size() < m_queSize) {
     m_taskQueue.push(std::move(cb));
