@@ -10,9 +10,9 @@
 
 #ifndef THREADPOOLS_SYNCTHREADPOOL_SYNCTHREADPOOL_H_
 #define THREADPOOLS_SYNCTHREADPOOL_SYNCTHREADPOOL_H_
-constexpr int ASYNC_MANAGER_THREAD_SLEEP_TIME = 3;
-constexpr int ASYNC_EXIT_THREAD_NUM = 2;
-constexpr int ASYNC_QUEUE_MAX_SIZE = 1024;
+constexpr int SYNC_MANAGER_THREAD_SLEEP_TIME = 3;
+constexpr int SYNC_EXIT_THREAD_NUM = 2;
+constexpr int SYNC_QUEUE_MAX_SIZE = 1024;
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
@@ -27,7 +27,7 @@ class SyncThreadPool {
   using taskCallBack = std::function<void(void)>;
  public:
   explicit SyncThreadPool(int min = 3, int max = std::thread::hardware_concurrency(),
-                          int queMaxSize = ASYNC_QUEUE_MAX_SIZE);
+                          int queMaxSize = SYNC_QUEUE_MAX_SIZE);
   ~SyncThreadPool();
 
   SyncThreadPool(const SyncThreadPool &) = delete;

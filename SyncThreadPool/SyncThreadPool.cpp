@@ -48,7 +48,7 @@ void SyncThreadPool::worker() {
 
 void SyncThreadPool::manager() {
   while (!m_stop.load()) {
-    std::this_thread::sleep_for(std::chrono::seconds(ASYNC_MANAGER_THREAD_SLEEP_TIME));
+    std::this_thread::sleep_for(std::chrono::seconds(SYNC_MANAGER_THREAD_SLEEP_TIME));
     int idleThreadNum = m_idleThreadNum.load();
     int curThreadNum = m_curThreadNum.load();
     // 什么时候增加线程？没有空闲线程，但要让已有线程数量小于最大线程数量，那么就可以增加
@@ -62,10 +62,10 @@ void SyncThreadPool::manager() {
       // 什么时候减少线程？有空闲线程且为已有的线程数量的一半，但要让任务线程数量大于最小线程数量，那么就可以减少
     else if (idleThreadNum > (curThreadNum / 2) && curThreadNum > m_min) {
       int exit_num = m_idleThreadNum.load();
-      int result = std::min(exit_num, ASYNC_EXIT_THREAD_NUM);  // 确保销毁的线程小于等于空闲线程的数量
+      int result = std::min(exit_num, SYNC_EXIT_THREAD_NUM);  // 确保销毁的线程小于等于空闲线程的数量
       m_exitThreadNum.store(result);
       m_cond.notify_all();
-      std::this_thread::sleep_for(std::chrono::seconds(ASYNC_MANAGER_THREAD_SLEEP_TIME));
+      std::this_thread::sleep_for(std::chrono::seconds(SYNC_MANAGER_THREAD_SLEEP_TIME));
       for (const auto id : m_threadFindVec) {
         if ((m_threadPoolMap.find(id) != m_threadPoolMap.end()) && m_threadPoolMap[id].joinable()) {
           m_threadPoolMap[id].join();
