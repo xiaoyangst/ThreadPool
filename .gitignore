@@ -1,3 +1,6 @@
 cmake-build-debug/
 tmp/
 .idea/
+main.cpp
+AsyncThreadPool/main.cpp
+SyncThreadPool/main.cpp
