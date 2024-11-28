@@ -1,10 +1,13 @@
-#include <iostream>
 #include "AsyncThreadPool.h"
-constexpr int ASYNC_MANAGER_THREAD_SLEEP_TIME = 3;
-constexpr int ASYNC_EXIT_THREAD_NUM = 2;
 
-AsyncThreadPool::AsyncThreadPool(int min, int max)
-    : m_min(min), m_max(max), m_curThreadNum(min), m_idleThreadNum(min), m_exitThreadNum(0), m_stop(false) {
+AsyncThreadPool::AsyncThreadPool(int min, int max, int queMaxSize)
+    : m_min(min),
+      m_max(max),
+      m_queSize(queMaxSize),
+      m_curThreadNum(min),
+      m_idleThreadNum(min),
+      m_exitThreadNum(0),
+      m_stop(false) {
   m_manager = std::make_unique<std::thread>(&AsyncThreadPool::manager, this);
   for (int i = 0; i < m_curThreadNum; ++i) {
     auto th = std::thread(&AsyncThreadPool::worker, this);
@@ -13,12 +16,14 @@ AsyncThreadPool::AsyncThreadPool(int min, int max)
   }
 }
 
-void AsyncThreadPool::addTask(AsyncThreadPool::taskCallBack cb) {
-  {
-    std::lock_guard<std::mutex> lock(m_queueMtx);
+bool AsyncThreadPool::addTask(AsyncThreadPool::taskCallBack cb) {
+  std::lock_guard<std::mutex> lg(m_queueMtx);
+  if (m_taskQueue.size() < m_queSize) {
     m_taskQueue.push(std::move(cb));
+    m_cond.notify_one();
+    return true;
   }
-  m_cond.notify_one();
+  return false;
 }
 
 void AsyncThreadPool::worker() {
@@ -64,7 +69,7 @@ void AsyncThreadPool::manager() {
       std::thread::id id = th.get_id();
       m_threadPoolMap[id] = std::move(th);
     }
-    // 什么时候减少线程？有空闲线程且为已有的线程数量的一半，但要让任务线程数量大于最小线程数量，那么就可以减少
+      // 什么时候减少线程？有空闲线程且为已有的线程数量的一半，但要让任务线程数量大于最小线程数量，那么就可以减少
     else if (idleThreadNum > (curThreadNum / 2) && curThreadNum > m_min) {
       int exit_num = m_idleThreadNum.load();
       int result = std::min(exit_num, ASYNC_EXIT_THREAD_NUM);  // 确保销毁的线程小于等于空闲线程的数量
